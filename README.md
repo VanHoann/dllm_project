@@ -1,7 +1,6 @@
 # Phase-MoE: A Co-Design to Bound the Expert Explosion in Block Diffusion Language Models
 
 [![Framework: PyTorch](https://img.shields.io/badge/Framework-PyTorch-orange.svg)](https://pytorch.org/)&nbsp;
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
 This repository contains the official code for the paper **Phase-MoE: A Co-Design to Bound the Expert Explosion in Block Diffusion Language Models**, provided as supplementary material for review.
 
@@ -133,3 +132,18 @@ sbatch scripts/hpc/dInfer/eval_loop_1gpu.sbatch
 ```
 
 These scripts automatically handle extracting the distributed checkpoint, converting it to Hugging Face format via `moe_convertor.py`, injecting the correct Phase-MoE `config.json`, and executing the `lm-eval` harness.
+
+---
+
+## 📖 Citation
+
+If you find this work or codebase useful in your research, please cite our workshop paper:
+
+```bibtex
+@inproceedings{trinh2026phasemoe,
+  title     = {Phase-MoE: A Co-Design to Bound the Expert Explosion in Block Diffusion Language Models},
+  author    = {Trinh, Van-Hoan and Pauline, Vincent and Bauer, Stefan},
+  booktitle = {NeurIPS 2026 Workshop on Diffusion Language Models: Foundations, Efficiency, and Reasoning (DiffuLM)},
+  year      = {2026},
+  url       = {}
+}
