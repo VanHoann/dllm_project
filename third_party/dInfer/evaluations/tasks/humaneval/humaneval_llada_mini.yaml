@@ -1,0 +1,94 @@
+task: humaneval_llada_mini
+dataset_path: openai_humaneval
+dataset_name: null
+test_split: test
+output_type: generate_until
+unsafe_code: true
+doc_to_text: "You are an expert Python programmer. Please complete the following Python function. Enclose your full, completed code (including the original prompt) within ```python delimiters.\n\nHere is the starting code:\n```python\n{{prompt}}```\n\n"
+# HumanEval uses the 'test' column to store the assertion checks for code_eval
+doc_to_target: "{{test}}"
+num_fewshot: 4
+metric_list:
+  - metric: !function utils.pass_at_1
+    aggregation: mean
+    higher_is_better: true
+generation_kwargs:
+  until:
+    - "\n```\n"
+    - "<|role_end|>"
+    - "<|endoftext|>"
+  max_gen_toks: 512
+  temperature: 0.0
+  do_sample: false
+fewshot_config:
+  sampler: first_n
+  doc_to_target: "```python\n{{prompt}}{{canonical_solution}}\n```"
+  samples:
+    - prompt: |
+        def is_prime(n: int) -> bool:
+            """Return True if n is a prime number, False otherwise."""
+      canonical_solution: |
+            if n < 2:
+                return False
+            for i in range(2, int(n ** 0.5) + 1):
+                if n % i == 0:
+                    return False
+            return True
+      test: |
+        def check(candidate):
+            assert candidate(1) == False
+            assert candidate(2) == True
+            assert candidate(11) == True
+            assert candidate(15) == False
+
+    - prompt: |
+        def second_largest(lst: list) -> int:
+            """Return the second largest unique element in the list. Return None if it doesn't exist."""
+      canonical_solution: |
+            unique_lst = list(set(lst))
+            if len(unique_lst) < 2:
+                return None
+            unique_lst.sort()
+            return unique_lst[-2]
+      test: |
+        def check(candidate):
+            assert candidate([1, 2, 3, 4]) == 3
+            assert candidate([5, 5, 5]) == None
+            assert candidate([-10, -5, 0, 5]) == 0
+
+    - prompt: |
+        def word_frequencies(text: str) -> dict:
+            """Count the frequencies of words in a string, ignoring case."""
+      canonical_solution: |
+            words = text.lower().split()
+            freq = {}
+            for w in words:
+                freq[w] = freq.get(w, 0) + 1
+            return freq
+      test: |
+        def check(candidate):
+            assert candidate("hello world Hello") == {'hello': 2, 'world': 1}
+            assert candidate("") == {}
+            assert candidate("a A a") == {'a': 3}
+
+    - prompt: |
+        def is_valid_ipv4(ip: str) -> bool:
+            """Check if the given string is a valid IPv4 address."""
+      canonical_solution: |
+            parts = ip.split('.')
+            if len(parts) != 4:
+                return False
+            for p in parts:
+                if not p.isdigit() or not 0 <= int(p) <= 255:
+                    return False
+                if p != '0' and p.startswith('0'):
+                    return False
+            return True
+      test: |
+        def check(candidate):
+            assert candidate("192.168.1.1") == True
+            assert candidate("256.0.0.1") == False
+            assert candidate("192.168.01.1") == False
+            assert candidate("127.0.0") == False
+metadata:
+  version: 1.0

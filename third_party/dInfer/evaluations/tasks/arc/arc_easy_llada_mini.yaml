@@ -1,0 +1,78 @@
+task: arc_easy_llada_mini
+dataset_path: allenai/ai2_arc
+dataset_name: ARC-Easy
+output_type: generate_until
+training_split: train
+test_split: test
+validation_split: validation
+doc_to_text: "Question: {{question}}\nOptions:\n{% for i in range(choices.label|length) %}{{choices.label[i]}}: {{choices.text[i]}}\n{% endfor %}Answer: "
+doc_to_target: "{{answerKey}}"
+fewshot_config:
+  sampler: first_n
+  samples:
+    - question: "What causes day and night on Earth?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["The rotation of Earth on its axis", "The tilt of Earth's axis", "The orbit of Earth around the Sun", "The orbit of the Moon around Earth"]
+      answerKey: "A: The rotation of Earth on its axis"
+    - question: "Which part of a plant is mainly responsible for taking in carbon dioxide and making food through photosynthesis?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["The roots", "The stem", "The leaves", "The flowers"]
+      answerKey: "C: The leaves"
+    - question: "Which characteristic is shared by all birds but no other animals?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["They lay eggs.", "They have feathers.", "They can fly.", "They are warm-blooded."]
+      answerKey: "B: They have feathers"
+    - question: "Which instrument should a meteorologist use to measure wind speed?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["A barometer", "A thermometer", "A rain gauge", "An anemometer"]
+      answerKey: "D: An anemometer"
+    - question: "An ice cube is left on a kitchen counter and turns into liquid water. What caused this change of state?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["The ice cube lost heat to the air.", "The ice cube absorbed heat from the environment.", "The air pressure decreased.", "The ice cube reacted with oxygen."]
+      answerKey: "B: The ice cube absorbed heat from the environment."
+    - question: "Why do some animals, like desert jackrabbits, have very large ears?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["To help them release body heat and stay cool", "To help them hear underwater", "To protect them from falling rocks", "To help them store extra water"]
+      answerKey: "A: To help them release body heat and stay cool"
+    - question: "Which material would be the best choice to wrap around a wire to prevent an electric shock?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Copper", "Iron", "Aluminum", "Rubber"]
+      answerKey: "D: Rubber"
+    - question: "When an apple falls from a tree, what force pulls it down toward the ground?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Friction", "Magnetism", "Gravity", "Electricity"]
+      answerKey: "C: Gravity"
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+generation_kwargs:
+  until:
+    - "\n\n"
+    - "\nQuestion:"
+    - "Question:"
+    - "\nOptions:"
+    - "<|endoftext|>"
+    - "<|role_end|>"
+  do_sample: false
+  temperature: 0.0
+repeats: 1
+num_fewshot: 8
+filter_list:
+  - name: "strict-match"
+    filter:
+      - function: "regex"
+        regex_pattern: '^\s*([A-D1-4])'
+      - function: "take_first"
+metadata:
+  version: 1.0

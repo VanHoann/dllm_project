@@ -1,0 +1,79 @@
+task: arc_challenge_llada_mini
+dataset_path: allenai/ai2_arc
+dataset_name: ARC-Challenge
+output_type: generate_until
+training_split: train
+test_split: test
+validation_split: validation
+doc_to_text: "Question: {{question}}\nOptions:\n{% for i in range(choices.label|length) %}{{choices.label[i]}}: {{choices.text[i]}}\n{% endfor %}Answer: "
+doc_to_target: "{{answerKey}}"
+fewshot_config:
+  sampler: first_n
+  samples:
+    - question: "Which cellular structure is primarily responsible for assembling proteins from amino acids?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Nucleus", "Mitochondrion", "Ribosome", "Golgi apparatus"]
+      answerKey: "C: Ribosome"
+    - question: "What optical phenomenon causes a straw in a glass of water to appear bent at the surface?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Refraction", "Reflection", "Diffraction", "Scattering"]
+      answerKey: "A: Refraction"
+    - question: "Why does a piece of metal feel colder than a piece of wood when both are at the same room temperature?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Metal has a higher specific heat capacity.", "Wood radiates heat more efficiently than metal.", "Metal has a lower density than wood.", "Metal has a higher thermal conductivity than wood."]
+      answerKey: "D: Metal has a higher thermal conductivity than wood."
+    - question: "Which geological feature is typically formed at a convergent boundary where an oceanic plate subducts under a continental plate?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Mid-ocean ridge", "Deep-ocean trench", "Transform fault", "Rift valley"]
+      answerKey: "B: Deep-ocean trench"
+    - question: "In a certain species of plant, the allele for tall height (T) is completely dominant over the allele for short height (t). If two heterozygous (Tt) plants are crossed, what is the probability that an offspring will be short?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["25%", "50%", "75%", "100%"]
+      answerKey: "A: 25%"
+    - question: "An ecosystem experiences a sudden drop in its primary producer population due to a disease. Which group of organisms will face the most immediate negative impact?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Apex predators", "Decomposers", "Secondary consumers", "Primary consumers"]
+      answerKey: "D: Primary consumers"
+    - question: "Elements in the same group of the periodic table exhibit similar chemical properties primarily because they have the same number of which particles?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Core electrons", "Valence electrons", "Neutrons in the nucleus", "Protons in the nucleus"]
+      answerKey: "B: Valence electrons"
+    - question: "What is the primary factor that determines whether a main-sequence star will eventually become a white dwarf or a supernova at the end of its life cycle?"
+      choices:
+        label: ["A", "B", "C", "D"]
+        text: ["Its initial orbital velocity", "Its distance from the galactic center", "Its initial mass", "The composition of its surrounding nebula"]
+      answerKey: "C: Its initial mass"
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+generation_kwargs:
+  until:
+    - "\n\n"
+    - "\nQuestion:"
+    - "Question:"
+    - "\nOptions:"
+    - "<|endoftext|>"
+    - "<|role_end|>"
+  do_sample: false
+  temperature: 0.0
+repeats: 1
+num_fewshot: 4
+filter_list:
+  - name: "strict-match"
+    filter:
+      - function: "regex"
+        # Captures A, B, C, D or 1, 2, 3, 4 (ARC uses both formats depending on the specific question)
+        regex_pattern: '^\s*([A-D1-4])'
+      - function: "take_first"
+metadata:
+  version: 1.0

@@ -1,0 +1,61 @@
+task: hellaswag_llada_mini
+dataset_path: hellaswag
+dataset_name: default
+output_type: generate_until
+training_split: train
+test_split: validation
+doc_to_text: "Question: Which is the most logical continuation of the context?\nContext: {{ctx}}\nOptions:\n0: {{endings[0]}}\n1: {{endings[1]}}\n2: {{endings[2]}}\n3: {{endings[3]}}\nAnswer: "
+doc_to_target: "{{label}}"
+fewshot_config:
+  sampler: first_n
+  samples:
+    - ctx: "The chef prepares the vegetables by washing them. Then, he"
+      endings: ["throws them into the garbage bin.", "serves them raw on a silver platter.", "chops them into small pieces on a cutting board.", "puts them in the freezer for the next day."]
+      label: "2: chops them into small pieces on a cutting board."
+    - ctx: "A woman walks out onto the grass. two small dogs"
+      endings: ["follow her on leashes.", "run out onto the stage.", "run out onto the grass.", "walk out onto the grass."]
+      label: "0: follow her on leashes."
+    - ctx: "A runner lines up at the starting blocks for the 100m sprint. The starter pistol fires and the runner"
+      endings: ["walks backwards slowly.", "sits down on the track.", "turns around to talk to the crowd.", "bursts forward out of the blocks."]
+      label: "3: bursts forward out of the blocks."
+    - ctx: "A man is performing a skateboard trick on a ramp. He"
+      endings: ["lands perfectly and continues riding.", "falls off the skateboard and hits the ground.", "starts juggling three balls in the air.", "takes off his helmet and bows to the crowd."]
+      label: "1: falls off the skateboard and hits the ground."
+    - ctx: "A man is fixing a flat tire on the side of the road. He takes out the jack and"
+      endings: ["lifts the car off the ground.", "drives away at high speed.", "begins to paint the car blue.", "eats a sandwich instead."]
+      label: "0: lifts the car off the ground."
+    - ctx: "A student sits at their desk during a final exam. They read the first question and"
+      endings: ["rip the paper into tiny pieces.", "stand up and shout for joy.", "carefully write down their answer.", "start singing a loud song."]
+      label: "2: carefully write down their answer."
+    - ctx: "A cat stalks a bird through the tall grass. The cat crouches low, pounces, and"
+      endings: ["flies up into the sky.", "misses as the bird flies away.", "starts to bark like a dog.", "falls asleep instantly."]
+      label: "1: misses as the bird flies away."
+    - ctx: "A young girl is sitting at a piano. She places her sheet music on the stand and"
+      endings: ["stands up and walks away.", "starts playing the guitar.", "turns off the lights in the room.", "begins playing a classical melody."]
+      label: "3: begins playing a classical melody."
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+generation_kwargs:
+  until:
+    - "\n\n"
+    - "\nQuestion:"
+    - "Question:"
+    - "\nOptions:"
+    - "<|endoftext|>"
+    - "<|role_end|>"
+  do_sample: false
+  temperature: 0.0
+repeats: 1
+num_fewshot: 8
+filter_list:
+  - name: "strict-match"
+    filter:
+      - function: "regex"
+        regex_pattern: '^\s*([0-3])'
+      - function: "take_first"
+metadata:
+  version: 1.0

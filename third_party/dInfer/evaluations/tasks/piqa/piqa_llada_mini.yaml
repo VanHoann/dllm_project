@@ -1,0 +1,69 @@
+task: piqa_llada_mini
+dataset_path: piqa
+output_type: generate_until
+training_split: train
+validation_split: validation
+test_split: validation
+doc_to_text: "Question: {{goal}}\nOptions:\nA: {{sol1}}\nB: {{sol2}}\nAnswer: "
+doc_to_target: "{{ answer if answer is defined else ('A' if label == 0 else 'B') }}"
+fewshot_config:
+  sampler: first_n
+  samples:
+    - goal: "How do I ready a guinea pig cage for its new occupants?"
+      sol1: "Provide the guinea pig with a cage full of a few inches of bedding made of ripped paper strips, you will also need to supply it with a water bottle and a food dish."
+      sol2: "Provide the guinea pig with a cage full of a few inches of bedding made of ripped jeans material, you will also need to supply it with a water bottle and a food dish."
+      answer: "A: Provide the guinea pig with a cage full of a few inches of bedding made of ripped paper strips, you will also need to supply it with a water bottle and a food dish."
+    - goal: "To quickly crush garlic,"
+      sol1: "place it in a plastic bag and hit it with a rolling pin."
+      sol2: "place it on a cutting board and press down on it with the flat side of a heavy knife."
+      answer: "B: place it on a cutting board and press down on it with the flat side of a heavy knife."
+    - goal: "How to make a makeshift ice pack"
+      sol1: "Put a wet sponge in a ziploc bag and freeze it."
+      sol2: "Put a dry sponge in a ziploc bag and freeze it."
+      answer: "A: Put a wet sponge in a ziploc bag and freeze it."
+    - goal: "To clean a cast iron skillet,"
+      sol1: "soak it in soapy water for a few hours, then scrub with a steel wool pad."
+      sol2: "scrub it with coarse salt and a little oil using a paper towel."
+      answer: "B: scrub it with coarse salt and a little oil using a paper towel."
+    - goal: "How to easily remove the pit from an avocado?"
+      sol1: "Cut the avocado in half, squeeze the skin tightly until the pit pops out."
+      sol2: "Cut the avocado in half, whack the pit with the sharp edge of a knife, twist, and pull."
+      answer: "B: Cut the avocado in half, whack the pit with the sharp edge of a knife, twist, and pull."
+    - goal: "If you want to keep your sliced apples from turning brown,"
+      sol1: "toss them in a bowl with a little bit of lemon juice."
+      sol2: "toss them in a bowl with a little bit of baking soda."
+      answer: "A: toss them in a bowl with a little bit of lemon juice."
+    - goal: "How to separate stuck drinking glasses"
+      sol1: "Put ice inside the inner glass and set the outer glass in warm water."
+      sol2: "Put warm water inside the inner glass and set the outer glass in ice."
+      answer: "A: Put ice inside the inner glass and set the outer glass in warm water."
+    - goal: "To cool down a hot beverage quickly,"
+      sol1: "wrap the bottle in a dry paper towel and place it in the fridge."
+      sol2: "wrap the bottle in a wet paper towel and place it in the freezer."
+      answer: "B: wrap the bottle in a wet paper towel and place it in the freezer."
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+generation_kwargs:
+  until:
+    - "\n\n"
+    - "\nQuestion:"
+    - "Question:"
+    - "\nOptions:"
+    - "<|endoftext|>"
+    - "<|role_end|>"
+  do_sample: false
+  temperature: 0.0
+repeats: 1
+num_fewshot: 8
+filter_list:
+  - name: "strict-match"
+    filter:
+      - function: "regex"
+        regex_pattern: '^\s*([A-B])'
+      - function: "take_first"
+metadata:
+  version: 1.0

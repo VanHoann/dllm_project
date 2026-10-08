@@ -1,0 +1,62 @@
+task: mmlu_llada_mini
+dataset_path: cais/mmlu
+dataset_name: all
+output_type: generate_until
+training_split: auxiliary_train
+validation_split: dev
+test_split: test
+doc_to_text: "Question: {{question}}\nOptions:\n{% for i in range(choices|length) %}{{ ['A', 'B', 'C', 'D'][i] }}: {{choices[i]}}\n{% endfor %}Answer: "
+doc_to_target: "{{ answer if answer is string else ['A', 'B', 'C', 'D'][answer] }}"
+fewshot_config:
+  sampler: first_n
+  samples:
+    - question: "What is the closest planet to the Sun in our solar system?"
+      choices: ["Venus", "Mercury", "Earth", "Mars"]
+      answer: "B: Mercury"
+    - question: "Which of the following particles has a positive electric charge?"
+      choices: ["Proton", "Electron", "Neutron", "Photon"]
+      answer: "A: Proton"
+    - question: "Which of the following is a characteristic of a perfectly competitive market?"
+      choices: ["Firms are price setters", "There are few buyers and sellers", "Firms produce differentiated products", "There are no barriers to entry or exit"]
+      answer: "D: There are no barriers to entry or exit"
+    - question: "What is the capital of France?"
+      choices: ["London", "Berlin", "Paris", "Madrid"]
+      answer: "C: Paris"
+    - question: "In philosophy, what is the study of knowledge and justified belief called?"
+      choices: ["Epistemology", "Metaphysics", "Ethics", "Aesthetics"]
+      answer: "A: Epistemology"
+    - question: "What is the embryological origin of the hyoid bone?"
+      choices: ["The first pharyngeal arch", "The first and second pharyngeal arches", "The second pharyngeal arch", "The second and third pharyngeal arches"]
+      answer: "D: The second and third pharyngeal arches"
+    - question: "Which thermodynamic law states that energy cannot be created or destroyed?"
+      choices: ["The Zeroth Law", "The First Law", "The Second Law", "The Third Law"]
+      answer: "B: The First Law"
+    - question: "Which gas is most abundant in Earth's atmosphere?"
+      choices: ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"]
+      answer: "C: Nitrogen"
+metric_list:
+  - metric: exact_match
+    aggregation: mean
+    higher_is_better: true
+    ignore_case: true
+    ignore_punctuation: true
+generation_kwargs:
+  until:
+    - "\n\n"
+    - "\nQuestion:"
+    - "Question:"
+    - "\nOptions:"
+    - "<|endoftext|>"
+    - "<|role_end|>"
+  do_sample: false
+  temperature: 0.0
+repeats: 1
+num_fewshot: 8
+filter_list:
+  - name: "strict-match"
+    filter:
+      - function: "regex"
+        regex_pattern: '^\s*([A-D])'
+      - function: "take_first"
+metadata:
+  version: 1.0

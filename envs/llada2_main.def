@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: continuumio/miniconda3:latest
+
+%files
+    # Relative paths assuming build command is run from the project root:
+    # apptainer build envs/llada2.sif envs/environment.def
+    third_party/dFactory /opt/dFactory
+    third_party/dInfer /opt/dInfer
+
+%post
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update && apt-get install -y build-essential wget git numactl libibverbs-dev
+    
+    . /opt/conda/etc/profile.d/conda.sh
+    conda config --add channels conda-forge
+    conda config --set channel_priority strict
+    conda config --set ssl_verify false
+    
+    # Create isolated environment with Python 3.11
+    conda create -n llada2_env python=3.11 pip -y -c conda-forge --override-channels
+    conda activate llada2_env
+    
+    # Install compatible CUDA 12.4 Toolkit
+    conda install -y cuda-toolkit=12.4 -c nvidia -c conda-forge --override-channels
+    pip config set global.trusted-host "pypi.org files.pythonhosted.org download.pytorch.org"
+    
+    # 1. PyTorch with CUDA 12.4
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+    
+    # 2. Serving engines & core dependencies
+    pip install --no-cache-dir vllm==0.10.2
+    pip install --no-cache-dir sglang==0.5.3.post1
+    
+    # 3. Third-party packages from copied source trees
+    pip install --no-cache-dir /opt/dFactory/VeOmni
+    pip install --no-cache-dir /opt/dInfer
+    
+    # 4. Evaluation harnesses
+    pip install --no-cache-dir lm-eval==0.4.12 langdetect immutabledict
+
+    conda clean --all -y
+    rm -rf /root/.cache/pip
+
+%environment
+    export PATH="/opt/conda/envs/llada2_env/bin:$PATH"
+    export CUDA_HOME="/opt/conda/envs/llada2_env"
+    export HF_HOME="/tmp/hf_cache"
+    export HF_DATASETS_CACHE="/tmp/hf_cache/datasets"
+
+%help
+    Reproducible container definition for MoE Block Diffusion Language Models (dFactory + dInfer + SGLang).
